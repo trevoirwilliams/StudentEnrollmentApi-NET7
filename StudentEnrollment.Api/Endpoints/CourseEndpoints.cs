@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using StudentEnrollment.Api.DTOs.Course;
 using StudentEnrollment.Data;
@@ -32,7 +33,7 @@ public static class CourseEndpoints
         .Produces<CourseDto>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound);
 
-        routes.MapGet("/api/Course/GetStudents/{id}", async (int Id, ICourseRepository repo, IMapper mapper) =>
+        routes.MapGet("/api/Course/GetStudents/{id}", [Authorize] async (int Id, ICourseRepository repo, IMapper mapper) =>
         {
             return await repo.GetStudentList(Id)
                 is Course model
@@ -44,7 +45,7 @@ public static class CourseEndpoints
         .Produces<CourseDetailsDto>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound);
 
-        routes.MapPut("/api/Course/{id}", async (int Id, CourseDto courseDto, ICourseRepository repo, IMapper mapper) =>
+        routes.MapPut("/api/Course/{id}", [Authorize] async (int Id, CourseDto courseDto, ICourseRepository repo, IMapper mapper) =>
         {
             var foundModel = await repo.GetAsync(Id);
 
@@ -63,7 +64,7 @@ public static class CourseEndpoints
         .Produces(StatusCodes.Status404NotFound)
         .Produces(StatusCodes.Status204NoContent);
 
-        routes.MapPost("/api/Course/", async (CreateCourseDto courseDto, ICourseRepository repo, IMapper mapper) =>
+        routes.MapPost("/api/Course/", [Authorize] async (CreateCourseDto courseDto, ICourseRepository repo, IMapper mapper) =>
         {
             var course = mapper.Map<Course>(courseDto);
             await repo.AddAsync(course);
@@ -73,7 +74,7 @@ public static class CourseEndpoints
         .WithName("CreateCourse")
         .Produces<Course>(StatusCodes.Status201Created);
 
-        routes.MapDelete("/api/Course/{id}", async (int Id, ICourseRepository repo) =>
+        routes.MapDelete("/api/Course/{id}", [Authorize(Roles = "Administrator")] async (int Id, ICourseRepository repo) =>
         {
             return await repo.DeleteAsync(Id) ? Results.NoContent() : Results.NotFound();
         })

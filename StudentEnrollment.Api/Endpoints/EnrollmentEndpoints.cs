@@ -1,8 +1,11 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using NuGet.Configuration;
 using StudentEnrollment.Api.DTOs.Enrollment;
 using StudentEnrollment.Data;
 using StudentEnrollment.Data.Contracts;
+using System.Data;
 
 namespace StudentEnrollment.Api.Endpoints;
 
@@ -10,7 +13,7 @@ public static class EnrollmentEndpoints
 {
     public static void MapEnrollmentEndpoints(this IEndpointRouteBuilder routes)
     {
-        routes.MapGet("/api/Enrollment", async (IEnrollmentRepository repo, IMapper mapper) =>
+        routes.MapGet("/api/Enrollment", [Authorize] async (IEnrollmentRepository repo, IMapper mapper) =>
         {
             var enrollments = await repo.GetAllAsync();
             var data = mapper.Map<List<EnrollmentDto>>(enrollments);
@@ -20,7 +23,7 @@ public static class EnrollmentEndpoints
         .WithName("GetAllEnrollments")
         .Produces<List<EnrollmentDto>>(StatusCodes.Status200OK);
 
-        routes.MapGet("/api/Enrollment/{id}", async (int Id, IEnrollmentRepository repo, IMapper mapper) =>
+        routes.MapGet("/api/Enrollment/{id}", [Authorize] async (int Id, IEnrollmentRepository repo, IMapper mapper) =>
         {
             return await repo.GetAsync(Id)
                 is Enrollment model
@@ -32,7 +35,7 @@ public static class EnrollmentEndpoints
         .Produces<EnrollmentDto>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound);
 
-        routes.MapPut("/api/Enrollment/{id}", async (int Id, EnrollmentDto enrollmentDto, IEnrollmentRepository repo, IMapper mapper) =>
+        routes.MapPut("/api/Enrollment/{id}", [Authorize(Roles = "Administrator")] async (int Id, EnrollmentDto enrollmentDto, IEnrollmentRepository repo, IMapper mapper) =>
         {
             var foundModel = await repo.GetAsync(Id);
 
@@ -51,7 +54,7 @@ public static class EnrollmentEndpoints
         .Produces(StatusCodes.Status404NotFound)
         .Produces(StatusCodes.Status204NoContent);
 
-        routes.MapPost("/api/Enrollment/", async (CreateEnrollmentDto enrollmentDto, IEnrollmentRepository repo, IMapper mapper) =>
+        routes.MapPost("/api/Enrollment/", [Authorize] async (CreateEnrollmentDto enrollmentDto, IEnrollmentRepository repo, IMapper mapper) =>
         {
             var enrollment = mapper.Map<Enrollment>(enrollmentDto);
             await repo.AddAsync(enrollment);
@@ -61,7 +64,7 @@ public static class EnrollmentEndpoints
         .WithName("CreateEnrollment")
         .Produces<Enrollment>(StatusCodes.Status201Created);
 
-        routes.MapDelete("/api/Enrollment/{id}", async (int Id, IEnrollmentRepository repo, IMapper mapper) =>
+        routes.MapDelete("/api/Enrollment/{id}", [Authorize(Roles = "Administrator")] async (int Id, IEnrollmentRepository repo, IMapper mapper) =>
         {
             return await repo.DeleteAsync(Id) ? Results.NoContent() : Results.NotFound();
         })

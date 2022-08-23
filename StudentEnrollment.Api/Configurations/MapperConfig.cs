@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using StudentEnrollment.Api.DTOs.Authentication;
 using StudentEnrollment.Api.DTOs.Course;
 using StudentEnrollment.Api.DTOs.Enrollment;
 using StudentEnrollment.Api.DTOs.Student;
@@ -22,6 +23,8 @@ namespace StudentEnrollment.Api.Configurations
 
             CreateMap<Enrollment, CreateEnrollmentDto>().ReverseMap();
             CreateMap<Enrollment, EnrollmentDto>().ReverseMap();
+
+            ////CreateMap<RegisterDto, SchoolUser>().ReverseMap();
         }
     }
 }
