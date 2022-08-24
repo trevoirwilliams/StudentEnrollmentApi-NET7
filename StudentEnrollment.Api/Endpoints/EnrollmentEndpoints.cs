@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using NuGet.Configuration;
+using StudentEnrollment.Api.DTOs.Course;
 using StudentEnrollment.Api.DTOs.Enrollment;
 using StudentEnrollment.Data;
 using StudentEnrollment.Data.Contracts;
@@ -35,8 +37,15 @@ public static class EnrollmentEndpoints
         .Produces<EnrollmentDto>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound);
 
-        routes.MapPut("/api/Enrollment/{id}", [Authorize(Roles = "Administrator")] async (int Id, EnrollmentDto enrollmentDto, IEnrollmentRepository repo, IMapper mapper) =>
+        routes.MapPut("/api/Enrollment/{id}", [Authorize(Roles = "Administrator")] async (int Id, EnrollmentDto enrollmentDto, IEnrollmentRepository repo, IMapper mapper, IValidator<EnrollmentDto> validator) =>
         {
+            var validationResult = await validator.ValidateAsync(enrollmentDto);
+
+            if (!validationResult.IsValid)
+            {
+                return Results.BadRequest(validationResult.ToDictionary());
+            }
+
             var foundModel = await repo.GetAsync(Id);
 
             if (foundModel is null)
@@ -54,8 +63,15 @@ public static class EnrollmentEndpoints
         .Produces(StatusCodes.Status404NotFound)
         .Produces(StatusCodes.Status204NoContent);
 
-        routes.MapPost("/api/Enrollment/", async (CreateEnrollmentDto enrollmentDto, IEnrollmentRepository repo, IMapper mapper) =>
+        routes.MapPost("/api/Enrollment/", async (CreateEnrollmentDto enrollmentDto, IEnrollmentRepository repo, IMapper mapper, IValidator<CreateEnrollmentDto> validator) =>
         {
+            var validationResult = await validator.ValidateAsync(enrollmentDto);
+
+            if (!validationResult.IsValid)
+            {
+                return Results.BadRequest(validationResult.ToDictionary());
+            }
+
             var enrollment = mapper.Map<Enrollment>(enrollmentDto);
             await repo.AddAsync(enrollment);
             return Results.Created($"/Enrollments/{enrollment.Id}", enrollment);

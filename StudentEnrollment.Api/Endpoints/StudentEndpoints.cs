@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using StudentEnrollment.Api.DTOs.Course;
+using StudentEnrollment.Api.DTOs.Enrollment;
 using StudentEnrollment.Api.DTOs.Student;
 using StudentEnrollment.Data;
 using StudentEnrollment.Data.Contracts;
@@ -48,8 +50,15 @@ public static class StudentEndpoints
         .Produces<StudentDetailsDto>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound);
 
-        routes.MapPut("/api/Student/{id}", [Authorize(Roles = "Administrator")] async (int Id, StudentDto studentDto, IStudentRepository repo, IMapper mapper) =>
+        routes.MapPut("/api/Student/{id}", [Authorize(Roles = "Administrator")] async (int Id, StudentDto studentDto, IStudentRepository repo, IMapper mapper, IValidator<StudentDto> validator) =>
         {
+            var validationResult = await validator.ValidateAsync(studentDto);
+
+            if (!validationResult.IsValid)
+            {
+                return Results.BadRequest(validationResult.ToDictionary());
+            }
+
             var foundModel = await repo.GetAsync(Id);
 
             if (foundModel is null)
@@ -66,8 +75,15 @@ public static class StudentEndpoints
         .Produces(StatusCodes.Status404NotFound)
         .Produces(StatusCodes.Status204NoContent);
 
-        routes.MapPost("/api/Student/", [Authorize(Roles = "Administrator")] async (CreateStudentDto studentDto, IStudentRepository repo, IMapper mapper) =>
+        routes.MapPost("/api/Student/", [Authorize(Roles = "Administrator")] async (CreateStudentDto studentDto, IStudentRepository repo, IMapper mapper, IValidator<CreateStudentDto> validator) =>
         {
+            var validationResult = await validator.ValidateAsync(studentDto);
+
+            if (!validationResult.IsValid)
+            {
+                return Results.BadRequest(validationResult.ToDictionary());
+            }
+
             var student = mapper.Map<Student>(studentDto);
             await repo.AddAsync(student);
             return Results.Created($"/Students/{student.Id}", student);

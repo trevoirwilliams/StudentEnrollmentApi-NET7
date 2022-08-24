@@ -1,11 +1,18 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using FluentValidation;
+using System.ComponentModel.DataAnnotations;
 
 namespace StudentEnrollment.Api.DTOs.Course
 {
-    public class CourseDto
+    public class CourseDto : CreateCourseDto
     {
         public int Id { get; set; }
-        public string Title { get; set; }
-        public int Credits { get; set; }
+    }
+
+    public class CourseDtoValidator : AbstractValidator<CourseDto>
+    {
+        public CourseDtoValidator()
+        {
+            Include(new CreateCourseDtoValidator());
+        }
     }
 }

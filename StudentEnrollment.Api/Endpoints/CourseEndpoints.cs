@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using StudentEnrollment.Api.DTOs.Authentication;
 using StudentEnrollment.Api.DTOs.Course;
 using StudentEnrollment.Data;
 using StudentEnrollment.Data.Contracts;
@@ -11,12 +13,13 @@ public static class CourseEndpoints
 {
     public static void MapCourseEndpoints (this IEndpointRouteBuilder routes)
     {
-        routes.MapGet("/api/Course", [AllowAnonymous] async (ICourseRepository repo, IMapper mapper) =>
+        routes.MapGet("/api/Course", async (ICourseRepository repo, IMapper mapper) =>
         {
             var courses = await repo.GetAllAsync();
             var data = mapper.Map<List<CourseDto>>(courses);
             return data;
         })
+        .AllowAnonymous()
         .WithTags(nameof(Course))
         .WithName("GetAllCourses")
         .Produces<List<CourseDto>>(StatusCodes.Status200OK);
@@ -46,8 +49,15 @@ public static class CourseEndpoints
         .Produces<CourseDetailsDto>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound);
 
-        routes.MapPut("/api/Course/{id}", async (int Id, CourseDto courseDto, ICourseRepository repo, IMapper mapper) =>
+        routes.MapPut("/api/Course/{id}", async (int Id, CourseDto courseDto, ICourseRepository repo, IMapper mapper, IValidator<CourseDto> validator) =>
         {
+            var validationResult = await validator.ValidateAsync(courseDto);
+
+            if (!validationResult.IsValid)
+            {
+                return Results.BadRequest(validationResult.ToDictionary());
+            }
+
             var foundModel = await repo.GetAsync(Id);
 
             if (foundModel is null)
@@ -65,8 +75,15 @@ public static class CourseEndpoints
         .Produces(StatusCodes.Status404NotFound)
         .Produces(StatusCodes.Status204NoContent);
 
-        routes.MapPost("/api/Course/", async (CreateCourseDto courseDto, ICourseRepository repo, IMapper mapper) =>
+        routes.MapPost("/api/Course/", async (CreateCourseDto courseDto, ICourseRepository repo, IMapper mapper, IValidator<CreateCourseDto> validator) =>
         {
+            var validationResult = await validator.ValidateAsync(courseDto);
+
+            if (!validationResult.IsValid)
+            {
+                return Results.BadRequest(validationResult.ToDictionary());
+            }
+
             var course = mapper.Map<Course>(courseDto);
             await repo.AddAsync(course);
             return Results.Created($"/Courses/{course.Id}", course);
