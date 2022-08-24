@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using StudentEnrollment.Api.DTOs.Authentication;
 using StudentEnrollment.Api.Services;
 using StudentEnrollment.Api.DTOs;
+using Microsoft.AspNetCore.Authorization;
 
 namespace StudentEnrollment.Api.Endpoints
 {
@@ -25,6 +26,7 @@ namespace StudentEnrollment.Api.Endpoints
                 return Results.Ok(response);
 
             })
+            .AllowAnonymous()
             .WithTags("Authentication")
             .WithName("Login")
             .Produces(StatusCodes.Status200OK)
@@ -52,6 +54,7 @@ namespace StudentEnrollment.Api.Endpoints
                 return Results.BadRequest(errors);
 
             })
+            .AllowAnonymous()
             .WithTags("Authentication")
             .WithName("Register")
             .Produces(StatusCodes.Status200OK)

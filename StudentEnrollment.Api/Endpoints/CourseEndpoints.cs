@@ -11,7 +11,7 @@ public static class CourseEndpoints
 {
     public static void MapCourseEndpoints (this IEndpointRouteBuilder routes)
     {
-        routes.MapGet("/api/Course", async (ICourseRepository repo, IMapper mapper) =>
+        routes.MapGet("/api/Course", [AllowAnonymous] async (ICourseRepository repo, IMapper mapper) =>
         {
             var courses = await repo.GetAllAsync();
             var data = mapper.Map<List<CourseDto>>(courses);
@@ -26,14 +26,15 @@ public static class CourseEndpoints
             return await repo.GetAsync(Id)
                 is Course model
                     ? Results.Ok(mapper.Map<CourseDto>(model))
-                    : Results.NotFound();
+                    : Results.NotFound(); 
         })
+        .AllowAnonymous()
         .WithTags(nameof(Course))
         .WithName("GetCourseById")
         .Produces<CourseDto>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound);
 
-        routes.MapGet("/api/Course/GetStudents/{id}", [Authorize] async (int Id, ICourseRepository repo, IMapper mapper) =>
+        routes.MapGet("/api/Course/GetStudents/{id}",async (int Id, ICourseRepository repo, IMapper mapper) =>
         {
             return await repo.GetStudentList(Id)
                 is Course model
@@ -45,7 +46,7 @@ public static class CourseEndpoints
         .Produces<CourseDetailsDto>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound);
 
-        routes.MapPut("/api/Course/{id}", [Authorize] async (int Id, CourseDto courseDto, ICourseRepository repo, IMapper mapper) =>
+        routes.MapPut("/api/Course/{id}", async (int Id, CourseDto courseDto, ICourseRepository repo, IMapper mapper) =>
         {
             var foundModel = await repo.GetAsync(Id);
 
@@ -64,7 +65,7 @@ public static class CourseEndpoints
         .Produces(StatusCodes.Status404NotFound)
         .Produces(StatusCodes.Status204NoContent);
 
-        routes.MapPost("/api/Course/", [Authorize] async (CreateCourseDto courseDto, ICourseRepository repo, IMapper mapper) =>
+        routes.MapPost("/api/Course/", async (CreateCourseDto courseDto, ICourseRepository repo, IMapper mapper) =>
         {
             var course = mapper.Map<Course>(courseDto);
             await repo.AddAsync(course);

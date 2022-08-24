@@ -18,6 +18,7 @@ public static class StudentEndpoints
             var data = mapper.Map<List<StudentDto>>(students);
             return data;
         })
+        .AllowAnonymous()
         .WithTags(nameof(Student))
         .WithName("GetAllStudents")
         .Produces<List<StudentDto>>(StatusCodes.Status200OK);
@@ -29,12 +30,13 @@ public static class StudentEndpoints
                     ? Results.Ok(mapper.Map<StudentDto>(model))
                     : Results.NotFound();
         })
+        .AllowAnonymous()
         .WithTags(nameof(Student))
         .WithName("GetStudentById")
         .Produces<StudentDto>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound);
 
-        routes.MapGet("/api/Student/GetDetails/{id}", [Authorize] async (int Id, IStudentRepository repo, IMapper mapper) =>
+        routes.MapGet("/api/Student/GetDetails/{id}", async (int Id, IStudentRepository repo, IMapper mapper) =>
         {
             return await repo.GetStudentDetails(Id)
                 is Student model
