@@ -9,6 +9,8 @@ using StudentEnrollment.Api.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using FluentValidation;
 using Microsoft.AspNetCore.Http.HttpResults;
+using System.ComponentModel.DataAnnotations;
+using StudentEnrollment.Api.Filters;
 
 namespace StudentEnrollment.Api.Endpoints
 {
@@ -18,13 +20,6 @@ namespace StudentEnrollment.Api.Endpoints
         {
             routes.MapPost("/api/login/", async (LoginDto loginDto, IAuthManager authManager, IValidator<LoginDto> validator) =>
             {
-                var validationResult = await validator.ValidateAsync(loginDto);
-
-                if (!validationResult.IsValid)
-                {
-                    return Results.BadRequest(validationResult.ToDictionary());
-                }
-
                 var response = await authManager.Login(loginDto);
 
                 if(response is null)
@@ -35,6 +30,7 @@ namespace StudentEnrollment.Api.Endpoints
                 return Results.Ok(response);
 
             })
+            .AddEndpointFilter<ValidatationFilter<LoginDto>>()
             .AllowAnonymous()
             .WithTags("Authentication")
             .WithName("Login")
@@ -43,14 +39,6 @@ namespace StudentEnrollment.Api.Endpoints
 
             routes.MapPost("/api/register/", async (RegisterDto registerDto, IAuthManager authManager, IValidator<RegisterDto> validator) =>
             {
-
-                var validationResult = await validator.ValidateAsync(registerDto);
-
-                if (!validationResult.IsValid)
-                {
-                    return Results.BadRequest(validationResult.ToDictionary());
-                }
-
                 var response = await authManager.Register(registerDto);
 
                 if (!response.Any())
@@ -71,6 +59,7 @@ namespace StudentEnrollment.Api.Endpoints
                 return Results.BadRequest(errors);
 
             })
+            .AddEndpointFilter<ValidatationFilter<RegisterDto>>()
             .AllowAnonymous()
             .WithTags("Authentication")
             .WithName("Register")
